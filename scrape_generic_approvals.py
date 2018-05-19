@@ -21,18 +21,16 @@ homepage_url = "http://wayback.archive-it.org/7993/20170111082703/http://www.fda
 driver.get(homepage_url) #get the webpage
 time.sleep(1)
 
-homepage_soup = BeautifulSoup(driver.page_source,"lxml") #Feed the URL into beautiful soup, which turns the HTML code underlying the website into a format the Python can parse
-#print homepage_soup.prettify() #Print the page source
+homepage_soup = BeautifulSoup(driver.page_source,"lxml")
+#print homepage_soup.prettify() 
 
 #for YYYY in range(2001,2015):
 for YYYY in [2001,2015]:
     print_line()
     print "YEAR =",YYYY
-    #year_tag = homepage_soup.find_all('a',href=True,text="%s"%(YYYY))
+    
     year_tag = homepage_soup.find('a',href=True,text=re.compile('%s'%(YYYY)))
-    print "YEAR TAG:",year_tag
     year_link = "http://wayback.archive-it.org" + year_tag.get('href')
-    print "YEAR LINK:",year_link
     
     #Go to the link for that page and turn it into beautiful soup:
     driver.get(year_link)
@@ -78,15 +76,13 @@ for YYYY in [2001,2015]:
         csv_filename = str(YYYY)+month+".csv"
         with open(csv_filename,'w') as csv_file:
             
-            #Pull out all the TR tags (table rows), and then take each TH (header) OR TD (table data) and write as a new cell to CSV file (remove commas to make easier)
+            #Pull out all the TR tags (table rows), and then take each TH (header) OR TD (table data) and write as a new cell to CSV file
             for tr_tag in month_soup.find_all('tr'):
                 print_line()
                 #print tr_tag.prettify()
                 
                 for cell in tr_tag.find_all(['th','td']):
                     print cell.get_text().strip()
-                    #cell_value_unencoded = cell.get_text().replace(",","")
-                    #cell_value = cell_value_unencoded.encode('utf-8')
                     
                     cell_value = cell.get_text().replace(",","")
                     cell_value = filter(lambda x: x in printable, cell_value)
