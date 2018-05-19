@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-import xlsxwriter
 import time
 import string
 printable=set(string.printable)
@@ -13,8 +12,16 @@ def print_line():
     print "----------------------------------------------------------------------------------------------------------------------"
     print " "
     
+month_list_input = raw_input("What months do you want to scrape? Type ALL for all months. Separate months using commas. ")
+start_year = raw_input("What is the start year? Earliest option is 2001. ")
+end_year = raw_input("What is the end year? Latest option is 2015. ")
+
     
-month_list = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+if month_list_input.upper() == "ALL":
+    month_list = ["January","February","March","April","May","June","July","August","September","October","November","December"]
+
+else:
+    month_list = month_list_input.split(',')
 
 homepage_url = "http://wayback.archive-it.org/7993/20170111082703/http://www.fda.gov/Drugs/DevelopmentApprovalProcess/HowDrugsareDevelopedandApproved/DrugandBiologicApprovalReports/ANDAGenericDrugApprovals/ucm050527.htm"
 
@@ -24,8 +31,7 @@ time.sleep(1)
 homepage_soup = BeautifulSoup(driver.page_source,"lxml")
 #print homepage_soup.prettify() 
 
-#for YYYY in range(2001,2015):
-for YYYY in [2001,2015]:
+for YYYY in range(int(start_year),int(end_year)):
     print_line()
     print "YEAR =",YYYY
     
@@ -38,6 +44,7 @@ for YYYY in [2001,2015]:
     
     
     for month in month_list:
+        month = month.strip()
         #Find the URL for that month:
         if YYYY<2007:
             #print year_soup.prettify()
