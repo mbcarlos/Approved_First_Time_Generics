@@ -15,7 +15,6 @@ def print_line():
 month_list_input = raw_input("What months do you want to scrape? Type ALL for all months. Separate months using commas. ")
 start_year = raw_input("What is the start year? Earliest option is 2001. ")
 end_year = raw_input("What is the end year? Latest option is 2015. ")
-
     
 if month_list_input.upper() == "ALL":
     month_list = ["January","February","March","April","May","June","July","August","September","October","November","December"]
@@ -29,9 +28,9 @@ driver.get(homepage_url) #get the webpage
 time.sleep(1)
 
 homepage_soup = BeautifulSoup(driver.page_source,"lxml")
-#print homepage_soup.prettify() 
+print homepage_soup.prettify() 
 
-for YYYY in range(int(start_year),int(end_year)):
+for YYYY in range(int(start_year),int(end_year)+1):
     print_line()
     print "YEAR =",YYYY
     
@@ -80,17 +79,18 @@ for YYYY in range(int(start_year),int(end_year)):
         #print month_soup.prettify()
         
         #Pull all of the table elements out of the table and store them in a csv file named year_month
-        csv_filename = str(YYYY)+month+".csv"
+        csv_filename = "Data/"+str(YYYY)+month+".csv"
         with open(csv_filename,'w') as csv_file:
             
+            #Create a list containing all the th and then tr tags:
+            #Find the first th tag, then find it's parent, then that one's parent, and then get all the TR/TH tags in that tag:
+            first_th_tag = month_soup.find('th')
+            th_parent = first_th_tag.parent
+            th_grandparent = th_parent.parent
+            
             #Pull out all the TR tags (table rows), and then take each TH (header) OR TD (table data) and write as a new cell to CSV file
-            for tr_tag in month_soup.find_all('tr'):
-                print_line()
-                #print tr_tag.prettify()
-                
+            for tr_tag in th_grandparent:
                 for cell in tr_tag.find_all(['th','td']):
-                    print cell.get_text().strip()
-                    
                     cell_value = cell.get_text().replace(",","")
                     cell_value = filter(lambda x: x in printable, cell_value)
                     
