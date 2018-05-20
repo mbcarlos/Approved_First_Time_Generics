@@ -84,9 +84,22 @@ for YYYY in range(int(start_year),int(end_year)+1):
             
             #Create a list containing all the th and then tr tags:
             #Find the first th tag, then find it's parent, then that one's parent, and then get all the TR/TH tags in that tag:
-            first_th_tag = month_soup.find('th')
-            th_parent = first_th_tag.parent
-            th_grandparent = th_parent.parent
+            # first_th_tag = month_soup.find('th')
+            # th_parent = first_th_tag.parent
+            # th_grandparent = th_parent.parent
+            
+            
+            #Find the first td tag (table data), then find it's parent (which is the tr tag) and then that one's parent, which is the tag that should have ALL the rows in the table we care about
+            # first_td_tag = month_soup.find('td')
+            # td_parent = first_td_tag.parent
+            # th_grandparent = td_parent.parent
+            
+            
+            #Find the LAST td tag, get the parent, and then its parent:
+            all_td_tags = month_soup.find_all('td')
+            last_td_tag = all_td_tags[len(all_td_tags)-1]
+            td_parent = last_td_tag.parent
+            th_grandparent = td_parent.parent
             
             #Pull out all the TR tags (table rows), and then take each TH (header) OR TD (table data) and write as a new cell to CSV file
             for tr_tag in th_grandparent:
