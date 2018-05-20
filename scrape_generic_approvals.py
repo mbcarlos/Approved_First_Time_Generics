@@ -1,18 +1,18 @@
 from bs4 import BeautifulSoup
 import time
 import string
-printable=set(string.printable)
+printable=set(string.printable) #A list of printable characters; use it to filter out non-printable characters when writing to CSV
 import csv
 import re
-from selenium import webdriver #This allows us to read the webpage if uses Javascript
-driver = webdriver.PhantomJS() #Use phantonJS as our webdriver, which runs in the background (e.g. doesn't open up a new window) and allows us to collect javascript items (which we might not need for this tutorial, but could be useful for you in the future)
+from selenium import webdriver
+driver = webdriver.PhantomJS() 
 
 def print_line():
     print " "
     print "----------------------------------------------------------------------------------------------------------------------"
     print " "
     
-month_list_input = raw_input("What months do you want to scrape? Type ALL for all months. Separate months using commas. ")
+month_list_input = raw_input("What months do you want to scrape? Separate months using commas. Type ALL for all months. ")
 start_year = raw_input("What is the start year? Earliest option is 2001. ")
 end_year = raw_input("What is the end year? Latest option is 2015. ")
     
@@ -28,7 +28,6 @@ driver.get(homepage_url) #get the webpage
 time.sleep(1)
 
 homepage_soup = BeautifulSoup(driver.page_source,"lxml")
-print homepage_soup.prettify() 
 
 for YYYY in range(int(start_year),int(end_year)+1):
     print_line()
@@ -39,15 +38,16 @@ for YYYY in range(int(start_year),int(end_year)+1):
     
     #Go to the link for that page and turn it into beautiful soup:
     driver.get(year_link)
+    time.sleep(1)
     year_soup = BeautifulSoup(driver.page_source,"lxml")
     
     
     for month in month_list:
         month = month.strip()
+        print "MONTH =",month
+        
         #Find the URL for that month:
         if YYYY<2007:
-            #print year_soup.prettify()
-            
             #Figure out which column has "first generics" as the header:
             if month_list.index(month)==0:
                 col_num = -1
@@ -58,48 +58,33 @@ for YYYY in range(int(start_year),int(end_year)+1):
             
             #Find the URL for that month:
             month_tag = year_soup.find_all('a',href=True,text=re.compile(month))[first_generic_col]
-            print "Month tag for ",month,"is:"
-            print month_tag
             month_link = "http://wayback.archive-it.org" + month_tag.get('href')
-            print "Month URL is:", month_link
     
         elif YYYY>2006:
-            print "YEAR AFTER 2006"
-            #print year_soup.prettify()
-            
             month_tag = year_soup.find('a',href=True,text=re.compile(month))
             month_link = "http://wayback.archive-it.org" + month_tag.get('href')
-            print "Month URL is:", month_link
-            print "NUMBER OF TAGS WITH MONTH IN THE NAME:",len(year_soup.find_all('a',href=True,text=re.compile(month)))
+            #print "NUMBER OF TAGS WITH MONTH IN THE NAME:",len(year_soup.find_all('a',href=True,text=re.compile(month)))
     
         #Go to the URL for that month and turn it into soup:
         driver.get(month_link)
         month_soup = BeautifulSoup(driver.page_source,"lxml")
-        
-        #print month_soup.prettify()
+        time.sleep(1)
         
         #Pull all of the table elements out of the table and store them in a csv file named year_month
         csv_filename = "Data/"+str(YYYY)+month+".csv"
         with open(csv_filename,'w') as csv_file:
-            
-            #Create a list containing all the th and then tr tags:
-            #Find the first th tag, then find it's parent, then that one's parent, and then get all the TR/TH tags in that tag:
-            # first_th_tag = month_soup.find('th')
-            # th_parent = first_th_tag.parent
-            # th_grandparent = th_parent.parent
-            
-            
-            #Find the first td tag (table data), then find it's parent (which is the tr tag) and then that one's parent, which is the tag that should have ALL the rows in the table we care about
-            # first_td_tag = month_soup.find('td')
-            # td_parent = first_td_tag.parent
-            # th_grandparent = td_parent.parent
-            
-            
-            #Find the LAST td tag, get the parent, and then its parent:
+            #Find the LAST td tag, get the parent, and then its parent, 
             all_td_tags = month_soup.find_all('td')
             last_td_tag = all_td_tags[len(all_td_tags)-1]
             td_parent = last_td_tag.parent
             th_grandparent = td_parent.parent
+                
+            #If there is a <thead> tag in the GREAT grandparent, then get the great grandparent instead of the grandparent:
+            if len(th_grandparent.parent.find_all('thead'))>0:
+                th_grandparent = th_grandparent.parent
+                
+                #Pull out all of the TR tags from the greatgrandparent:
+                th_grandparent = th_grandparent.find_all('tr')
             
             #Pull out all the TR tags (table rows), and then take each TH (header) OR TD (table data) and write as a new cell to CSV file
             for tr_tag in th_grandparent:
